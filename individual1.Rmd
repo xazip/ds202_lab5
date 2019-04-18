@@ -114,4 +114,21 @@ Tally_Sex_MF %>% ggplot(aes(x = SEX, y = number))+ geom_bar(stat = "identity")+
 ```
 
 
+```{r}
+
+FRPP_GLC <- readxl::read_xlsx("FRPP GLC United States.xlsx")
+county <- map_data('county')
+
+FRPP_GLC_rename <- FRPP_GLC %>% mutate(STATE = as.integer(`State Code`), COUNTY = as.integer(`County Code`))
+
+Map_Join <- full_join(accident, FRPP_GLC_rename) %>% select("STATE", "COUNTY", "County Name", "State Name", "ST_CASE") %>% mutate(region = tolower(`State Name`), subregion = tolower(`County Name`)) %>% select("STATE", "COUNTY", "region", "subregion") %>% group_by(region, subregion) %>% summarize(number = n())
+
+Map_Join_df <- full_join(county, Map_Join, by = c("region", "subregion"))
+
+
+Map_Join_df %>% ggplot(aes(x = long, y = lat, fill = number))+ geom_polygon(aes(group = group))
+
+```
+
+
 
