@@ -117,9 +117,13 @@ Tally_Sex_MF %>% ggplot(aes(x = SEX, y = number))+ geom_bar(stat = "identity")+
 ```{r}
 
 FRPP_GLC <- readxl::read_xlsx("FRPP GLC United States.xlsx")
+
+colnames(FRPP_GLC) <- FRPP_GLC[1,]
+FRPP_GLC <- FRPP_GLC[-1,]
+
 county <- map_data('county')
 
-FRPP_GLC_rename <- FRPP_GLC %>% mutate(STATE = as.integer(`State Code`), COUNTY = as.integer(`County Code`))
+FRPP_GLC_rename <- FRPP_GLC %>% mutate(STATE = as.integer(`State Code`), COUNTY = as.integer(`County Code`))#
 
 Map_Join <- full_join(accident, FRPP_GLC_rename) %>% select("STATE", "COUNTY", "County Name", "State Name", "ST_CASE") %>% mutate(region = tolower(`State Name`), subregion = tolower(`County Name`)) %>% select("STATE", "COUNTY", "region", "subregion") %>% group_by(region, subregion) %>% summarize(number = n())
 
@@ -131,4 +135,26 @@ Map_Join_df %>% ggplot(aes(x = long, y = lat, fill = number))+ geom_polygon(aes(
 ```
 
 
+
+
+
+```{r}
+
+
+FRPP_GLC_TERR <- readxl::read_xlsx("FRPP GLC US Territories.xlsx")
+colnames(FRPP_GLC_TERR) <- FRPP_GLC_TERR[1,]
+FRPP_GLC_TERR[-1,]
+
+
+```
+
+
+```{r}
+#library(lubridate)
+#accident_weather <- accident %>% mutate(MONTH = as.Date(MONTH, origin = "1"))
+
+
+
+
+```
 
