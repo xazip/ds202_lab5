@@ -66,7 +66,7 @@ accident %>% select(DRUNK_DR) %>% filter(DRUNK_DR >= 1) %>% summarize(n())
 
 driver_1 <- person %>% subset(PER_TYP == 1)
 
-Joined_Data_ACCIDENTdrivers <- inner_join(driver_1, accident)
+Joined_Data_ACCIDENTdrivers <- full_join(driver_1, accident)
 
 Tally_NumberOfAccidents <- Joined_Data_ACCIDENTdrivers %>% group_by(DAY_WEEK) %>% summarize(number = n())
 Tally_NumberOfAccidents
@@ -123,38 +123,30 @@ FRPP_GLC <- FRPP_GLC[-1,]
 
 county <- map_data('county')
 
-FRPP_GLC_rename <- FRPP_GLC %>% mutate(STATE = as.integer(`State Code`), COUNTY = as.integer(`County Code`))#
+FRPP_GLC_rename <- FRPP_GLC %>% mutate(STATE = as.integer(`State Code`), COUNTY = as.integer(`County Code`))
 
-Map_Join <- full_join(accident, FRPP_GLC_rename) %>% select("STATE", "COUNTY", "County Name", "State Name", "ST_CASE") %>% mutate(region = tolower(`State Name`), subregion = tolower(`County Name`)) %>% select("STATE", "COUNTY", "region", "subregion") %>% group_by(region, subregion) %>% summarize(number = n())
+Map_Join <- full_join(accident, FRPP_GLC_rename) %>% select("STATE", "COUNTY", "County Name", "State Name", "ST_CASE") %>% mutate(region = tolower(`State Name`), subregion = tolower(`County Name`)) %>% select("STATE", "COUNTY", "region", "subregion") %>% group_by(region, subregion) %>% summarize(number = n()) #https://stackoverflow.com/questions/45357045/convert-a-column-in-r-data-frame-to-lower-case
 
 Map_Join_df <- full_join(county, Map_Join, by = c("region", "subregion"))
+
+Map_Join_df %>% ggplot(aes(x=long, y=lat))+
+  geom_polygon(aes(group= group))+ 
+  geom_point(aes(x=LONGITUD, y=LATITUDE), accident %>% 
+               filter(LONGITUD < 0 & LATITUDE > -130),size=0.02, color='white')
+
 
 
 Map_Join_df %>% ggplot(aes(x = long, y = lat, fill = number))+ geom_polygon(aes(group = group))
 
-```
-
-
-
-
-
-```{r}
-
-
-FRPP_GLC_TERR <- readxl::read_xlsx("FRPP GLC US Territories.xlsx")
-colnames(FRPP_GLC_TERR) <- FRPP_GLC_TERR[1,]
-FRPP_GLC_TERR[-1,]
-
-
-```
-
-
-```{r}
-#library(lubridate)
-#accident_weather <- accident %>% mutate(MONTH = as.Date(MONTH, origin = "1"))
-
+  
 
 
 
 ```
+
+
+
+
+
+
 
