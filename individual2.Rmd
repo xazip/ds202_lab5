@@ -1,0 +1,106 @@
+---
+title: "individual2"
+author: "Elaine"
+date: "4/15/2019"
+output: html_document
+---
+
+```{r}
+acc <- read.csv("https://raw.githubusercontent.com/xdaiISU/ds202materials/master/hwlabs/fars2017/accident.csv", stringsAsFactors = FALSE)
+names(acc)
+
+person <- read.csv("https://raw.githubusercontent.com/xdaiISU/ds202materials/master/hwlabs/fars2017/person.csv", stringsAsFactors = FALSE)
+names(person)
+
+library(tidyverse)
+
+```
+
+```{r}
+#Part one: Accident data
+str(acc)
+dayAcc <- acc %>% group_by(DAY_WEEK) %>% summarize(n=n())
+head(dayAcc, 7)
+table(acc$DAY_WEEK)
+
+hourAcc <- acc %>% group_by(HOUR) %>% summarize(n=n())
+head(hourAcc)
+table(acc$HOUR)
+
+oddAcc <- acc %>% group_by(DRUNK_DR) %>% summarize(n=n())
+
+oddAcc3 <- acc %>% group_by(DRUNK_DR) %>% filter(DRUNK_DR>=1) %>% summarize(sum(DRUNK_DR))
+head(oddAcc3)
+
+```
+
+```{r}
+#Part two: Connecting data
+person1 <- person %>% subset(PER_TYP==1)
+str(person1)
+#join by state and county for all datasets
+accdriv <- inner_join(person1, acc)
+
+num_of_acc <- accdriv %>% group_by(DAY_WEEK) %>% summarize(number = n())
+num_of_acc
+
+hour_of_day <- accdriv %>% group_by(HOUR) %>% filter(HOUR<=24) %>% summarize(number=n())
+hour_of_day
+
+sex_mF <- accdriv %>% group_by(SEX) %>% filter(SEX==1 | SEX==2) %>% summarize(number=n())
+sex_mF
+
+#Num of accidents by day of week
+num_of_acc %>% ggplot(aes(x=DAY_WEEK, y= number)) + 
+  geom_bar(stat='identity') + geom_text(aes(label= c("Sun", "Mon", "Tues", "Wed", "Thur", "Fri", "Sat"), vjust= -.2)) +
+  theme(axis.text.x = element_blank(), axis.text.y = element_text(face="bold", color="black")) +
+  ggtitle("Number of Accidents by Day") + xlab("Days of Week")+ ylab("Num of Accidents")
+
+#Hour of Day graph
+hour_of_day %>% ggplot(aes(x=HOUR, y=number, fill=number)) + geom_bar(stat="identity") +
+  geom_text(aes(label=c("12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm"), angle = 90), hjust=2) +
+  ggtitle("Num of Accidents by Hour in a Day") + xlab("Hour of Day") +
+  ylab("Num of Accidents")
+
+#Sex Graph
+sex_mF %>% ggplot(aes(x=SEX, y=number, fill=number)) + geom_bar(stat="identity") +
+  geom_text(aes(label=c("Male", "Female"), vjust=3.7), size=6)+
+  ggtitle("Male and Female Totals")+ xlab("Hour of Day") + ylab("Num of Accidents")
+
+
+```
+
+```{r}
+library(ggplot2)
+library(RColorBrewer)
+glc.us<-readxl::read_xlsx("FRPP GLC United States.xlsx")
+glc.terr<-readxl::read_xlsx("FRPP GLC US Territories.xlsx")
+#rearrange data
+colnames(glc.us)<-glc.us[1,]
+glc.us<-glc.us[-1,]
+colnames(glc.terr)<-glc.terr[1,]
+glc.terr<-glc.terr[-1,]
+
+# codes and names of counties
+glc.us1<- glc.us %>% mutate(STATE = as.numeric(`State Code`), COUNTY.CODE = as.numeric(`County Code`)) # maybe add `County Name` to this mutate?
+head(glc.us1)
+
+county <- map_data('county')
+
+acc.glc_join <- full_join(acc, glc.us1) %>% select("STATE", "COUNTY", "County Name", "State Name", "ST_CASE") %>% mutate(region = tolower(`State Name`), subregion = tolower(`County Name`)) %>% select("STATE", "COUNTY", "region", "subregion") %>% group_by(region, subregion) %>% summarize(number=n())
+
+acc.glc.county_join <- full_join(county, acc.glc_join, by = c("region", "subregion"))
+
+acc.glc.county_join %>% ggplot(aes(x = long, y = lat, fill = number))+ geom_polygon(aes(group = group)) + scale_fill_distiller(palette='OrRd')
+
+
+```
+
+```{r}
+library(lubridate)
+acc1 <- acc
+accident_szn <- acc1 %>% mutate(MONTH = month(MONTH)) %>% group_by(MONTH, WEATHER)
+
+
+
+```
